@@ -6,7 +6,7 @@ const ctx = canvas.getContext('2d')
 canvas.width = window.innerWidth 
 canvas.height = window.innerHeight
 
-canvas.fillStyle = 'black'
+ctx.fillStyle = 'black'
 ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 class Player {
@@ -16,7 +16,8 @@ class Player {
     }
     //Designing the player
     shape() {
-
+        //Preventing a snail trail from player
+        ctx.beginPath()
         ctx.moveTo(this.position.x + 30, this.position.y)
         ctx.lineTo(this.position.x - 10, this.position.y - 10)
         ctx.lineTo(this.position.x - 10, this.position.y + 10)
@@ -24,6 +25,13 @@ class Player {
 
         ctx.strokeStyle = 'white'
         ctx.stroke()
+    }
+
+    //Update the position for every frame based on the velocity of x & y
+    update() {
+        this.shape()
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
     }
 
 }
@@ -35,4 +43,40 @@ const player  = new Player( {
 
 player.shape()
 
-console.log(player)
+const keys = {
+    ArrowUp: {
+        pressed: false
+    }
+}
+
+//Adding in an animation loop
+function animate() {
+    window.requestAnimationFrame(animate)
+    ctx.fillStyle = 'black'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    player.update()
+
+
+    if (keys.ArrowUp.pressed) player.velocity.x = 1
+
+}
+
+animate()
+
+window.addEventListener('keydown', (evt) =>  {
+    switch (evt.code){
+        //Prints out when up, left, and right arrows are pressed on cosole log
+        case 'ArrowUp':
+            console.log('up arrow was pressed') 
+            keys.ArrowUp.pressed = true 
+            break
+        case 'ArrowLeft':
+            console.log('left arrow was pressed')   
+            break
+        case 'ArrowRight':
+            console.log('right arrow was pressed')   
+            break
+    }
+
+} )
