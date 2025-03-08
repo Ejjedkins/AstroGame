@@ -64,6 +64,10 @@ const keys = {
     }
 }
 
+const MSD = 3 //Created constant to apply to the spped of the player movement
+const RSD = 0.03 //Created constant to apply to the spped of the player movement
+
+
 //Adding in an animation loop
 function animate() {
     window.requestAnimationFrame(animate)
@@ -72,11 +76,19 @@ function animate() {
     
     player.update()
 
-    player.velocity.x = 0 // Allows the player to stop if key is released
-    if (keys.ArrowUp.pressed) player.velocity.x = 1
+    // Allows the player to stop if key is released
+    player.velocity.x = 0
+    player.velocity.y = 0 
+
+    if (keys.ArrowUp.pressed) {
         
-    if (keys.ArrowRight.pressed) player.rotation += 0.01
-        else if (keys.ArrowLeft.pressed) player.rotation -= 0.01 //Will rotate player the opposite way of right key
+        //Allows player to rotate in the right direction based on the rotation of the player
+        player.velocity.x = Math.cos(player.rotation) * MSD
+        player.velocity.y = Math.sin(player.rotation) * MSD
+    }
+        
+    if (keys.ArrowRight.pressed) player.rotation += RSD
+        else if (keys.ArrowLeft.pressed) player.rotation -= RSD //Will rotate player the opposite way of right key
 
 }
 
