@@ -66,7 +66,7 @@ const keys = {
 
 const MSD = 3 //Created constant to apply to the spped of the player movement
 const RSD = 0.03 //Created constant to apply to the spped of the player movement
-
+const FRN = 0.95 //Created constant for plye friction
 
 //Adding in an animation loop
 function animate() {
@@ -76,15 +76,18 @@ function animate() {
     
     player.update()
 
-    // Allows the player to stop if key is released
-    player.velocity.x = 0
-    player.velocity.y = 0 
 
     if (keys.ArrowUp.pressed) {
         
         //Allows player to rotate in the right direction based on the rotation of the player
         player.velocity.x = Math.cos(player.rotation) * MSD
         player.velocity.y = Math.sin(player.rotation) * MSD
+    } 
+    else if (!keys.ArrowUp.pressed) {
+      
+      //Adding some fraction to player so that they don't immediately stop
+      player.velocity.x *= FRN
+      player.velocity.y *= FRN
     }
         
     if (keys.ArrowRight.pressed) player.rotation += RSD
