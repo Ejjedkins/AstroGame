@@ -31,7 +31,7 @@ class Player {
 
         ctx.strokeStyle = 'white'
         ctx.stroke()
-        ctx.restore
+        ctx.restore()
     }
 
     //Update the position for every frame based on the velocity of x & y
