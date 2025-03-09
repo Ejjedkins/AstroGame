@@ -67,6 +67,28 @@ class Projectile{
     }
 }
 
+class Asteroid{
+    constructor({position, velocity}) {
+        this.position = position
+        this.velocity = velocity
+        this.radius = 50 * Math.random() + 10
+    }
+
+    draw() {
+        ctx.beginPath()
+        ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
+        ctx.closePath()
+        ctx.strokeStyle = 'white'
+        ctx.stroke()
+    }
+
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+    }
+}
+
 const player  = new Player( {
     position: {x:canvas.width / 2 , y :canvas.height / 2}, //Will place charater in the middle of the screen
     velocity:{x:0 , y :0}
@@ -91,9 +113,27 @@ const keys = {
 const MSD = 3 //Created constant to apply to the spped of the player movement
 const RSD = 0.03 //Created constant to apply to the spped of the player movement
 const FRN = 0.95 //Created constant for plye friction
+const PSD = 4 //Speed of projectile
 
 const projectiles = []
-const PSD = 4 //Speed of projectile
+const asteroids = []
+
+window.setInterval(() => {
+    asteroids.push(
+        new Asteroid({
+            position: {
+                x:0, 
+                y:0,
+            },
+            velocity: {
+                x:0, 
+                y:0,
+            },
+
+        })
+    )
+
+}, 3000)
 
 //Adding in an animation loop
 function animate() {
@@ -117,6 +157,12 @@ function animate() {
             projectiles.splice(i, 1)
         }
 
+    }
+
+    //Rendering in asteroids
+    for (let i = asteroids.length - 1; i >= 0; i--) {
+        const asteroid = asteroids[i]
+        asteroid.update()
     }
 
 
@@ -163,11 +209,7 @@ window.addEventListener('keydown', (evt) =>  {
             },
 
 
-        }))
-    
-    
-            console.log(projectiles)     
-            break   
+        })) 
     
     }
 
