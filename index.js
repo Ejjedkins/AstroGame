@@ -30,7 +30,9 @@ class Player {
         ctx.closePath()
 
         ctx.strokeStyle = 'white'
+        ctx.fillStyle = 'blue'
         ctx.stroke()
+        ctx.fill()
         ctx.restore()
     }
 
@@ -41,6 +43,28 @@ class Player {
         this.position.y += this.velocity.y
     }
 
+}
+
+class Projectile{
+    constructor({position, velocity}) {
+        this.position = position
+        this.velocity = velocity
+        this.radius = 5
+    }
+
+    draw() {
+        ctx.beginPath()
+        ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
+        canvas.closePath()
+        canvas.fillStyle = 'white'
+        canvas.fill()
+    }
+
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+    }
 }
 
 const player  = new Player( {
@@ -67,6 +91,8 @@ const keys = {
 const MSD = 3 //Created constant to apply to the spped of the player movement
 const RSD = 0.03 //Created constant to apply to the spped of the player movement
 const FRN = 0.95 //Created constant for plye friction
+
+const projectiles = []
 
 //Adding in an animation loop
 function animate() {
@@ -127,3 +153,4 @@ window.addEventListener('keyup', (evt) =>  {
     }
 
 } )
+
