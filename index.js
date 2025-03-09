@@ -93,6 +93,7 @@ const RSD = 0.03 //Created constant to apply to the spped of the player movement
 const FRN = 0.95 //Created constant for plye friction
 
 const projectiles = []
+const PSD = 4 //Speed of projectile
 
 //Adding in an animation loop
 function animate() {
@@ -106,6 +107,15 @@ function animate() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const projectile = projectiles[i]
         projectile.update()
+
+        //Making sure projectiles no longer exist when off screen
+        if (projectile.position.x + projectile.radius < 0 || 
+            projectile.position.x - projectile.radius > canvas.width ||
+            projectile.position.y - projectile.radius > canvas.height ||
+            projectile.position.y + projectile.radius < 0
+         ) {
+            projectiles.splice(i, 1)
+        }
 
     }
 
@@ -144,16 +154,21 @@ window.addEventListener('keydown', (evt) =>  {
         case 'Space':
             projectiles.push(new Projectile({
                 position : {
-                    x: player.position.x,
-                    y: player.position.y //Projectile will start a center of player
+                    x: player.position.x + Math.cos(player.rotation) * 30,
+                    y: player.position.y + Math.sin(player.rotation) * 30
             },
                 velocity :{
-                    x:1,
-                    y:0
+                    x: Math.cos(player.rotation) * PSD,
+                    y: Math.sin(player.rotation) * PSD
             },
 
 
         }))
+    
+    
+            console.log(projectiles)     
+            break   
+    
     }
 
 } )
