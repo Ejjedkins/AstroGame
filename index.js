@@ -55,9 +55,9 @@ class Projectile{
     draw() {
         ctx.beginPath()
         ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
-        canvas.closePath()
-        canvas.fillStyle = 'white'
-        canvas.fill()
+        ctx.closePath()
+        ctx.fillStyle = 'white'
+        ctx.fill()
     }
 
     update() {
@@ -102,6 +102,13 @@ function animate() {
     
     player.update()
 
+    //Rendering projectiles on screen through a for loop through the back of the array
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const projectile = projectiles[i]
+        projectile.update()
+
+    }
+
 
     if (keys.ArrowUp.pressed) {
         
@@ -134,6 +141,19 @@ window.addEventListener('keydown', (evt) =>  {
         case 'ArrowRight':
             keys.ArrowRight.pressed = true   
             break
+        case 'Space':
+            projectiles.push(new Projectile({
+                position : {
+                    x: player.position.x,
+                    y: player.position.y //Projectile will start a center of player
+            },
+                velocity :{
+                    x:1,
+                    y:0
+            },
+
+
+        }))
     }
 
 } )
@@ -153,4 +173,3 @@ window.addEventListener('keyup', (evt) =>  {
     }
 
 } )
-
