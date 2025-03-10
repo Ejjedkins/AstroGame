@@ -119,57 +119,59 @@ const projectiles = []
 const asteroids = []
 
 window.setInterval(() => {
-   const index = Math.floor(Math.random() * 4)
-   let x, y
-   let vx, vy
-   let radius = 50 * Math.random() + 10
+    let x, y;
+    let vx, vy;
+    let radius = 50 * Math.random() + 10;
 
-   switch(index) {
-    case 0: //left side of the screen
-        x = 0 - radius
-        y = Math.random() * canvas.height
-        vx = 1
-        vy = 0
-        break
-    
-    case 1: //top side of the screen
-        x = Math.random() * canvas.width
-        y = 0 - radius
-        vx = 0
-        vy = 1
-        break
-        
-    case 2: //right side of the screen
-        x = canvas.width + radius
-        y = Math.random() * canvas.height
-        vx = -1 
-        vy = 0
-        break    
+    // Determine spawn location (edge of screen)
+    const side = Math.floor(Math.random() * 4); // 0: left, 1: top, 2: right, 3: bottom
 
-    case 3: //bottom side of the screen
-        x = Math.random() * canvas.width
-        y = canvas.height+ radius
-        vx = 0
-        vy = -1
-        break
-    
- }
-    
+    switch (side) {
+        case 0: // left
+            x = 0 - radius;
+            y = Math.random() * canvas.height;
+            break;
+        case 1: // top
+            x = Math.random() * canvas.width;
+            y = 0 - radius;
+            break;
+        case 2: // right
+            x = canvas.width + radius;
+            y = Math.random() * canvas.height;
+            break;
+        case 3: // bottom
+            x = Math.random() * canvas.width;
+            y = canvas.height + radius;
+            break;
+    }
+
+    //Generate a random angle for velocity
+    const angle = Math.random() * 2 * Math.PI; // Random angle in radians (0 to 2*PI)
+
+    //Calculate velocity components
+    vx = Math.cos(angle);
+    vy = Math.sin(angle);
+
+    //Keep velocity consistent
+    const speed = 1; // Adjust speed as needed
+    const magnitude = Math.sqrt(vx * vx + vy * vy);
+    vx = (vx / magnitude) * speed;
+    vy = (vy / magnitude) * speed;
+
     asteroids.push(
         new Asteroid({
             position: {
-                x:x, 
-                y:y,
+                x: x,
+                y: y,
             },
             velocity: {
-                x:vx, 
-                y:vy,
+                x: vx,
+                y: vy,
             },
-            radius
+            radius,
         })
-    )
-
-}, 3000)
+    );
+}, 3000);
 
 //Adding in an animation loop
 function animate() {
