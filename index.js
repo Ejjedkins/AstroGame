@@ -68,10 +68,10 @@ class Projectile{
 }
 
 class Asteroid{
-    constructor({position, velocity}) {
+    constructor({position, velocity, radius}) {
         this.position = position
         this.velocity = velocity
-        this.radius = 50 * Math.random() + 10
+        this.radius = radius
     }
 
     draw() {
@@ -119,17 +119,53 @@ const projectiles = []
 const asteroids = []
 
 window.setInterval(() => {
+   const index = Math.floor(Math.random() * 4)
+   let x, y
+   let vx, vy
+   let radius = 50 * Math.random() + 10
+
+   switch(index) {
+    case 0: //left side of the screen
+        x = 0 - radius
+        y = Math.random() * canvas.height
+        vx = 1
+        vy = 0
+        break
+    
+    case 1: //top side of the screen
+        x = Math.random() * canvas.width
+        y = 0 - radius
+        vx = 0
+        vy = 1
+        break
+        
+    case 2: //right side of the screen
+        x = canvas.width + radius
+        y = Math.random() * canvas.height
+        vx = -1 
+        vy = 0
+        break    
+
+    case 3: //bottom side of the screen
+        x = Math.random() * canvas.width
+        y = canvas.height+ radius
+        vx = 0
+        vy = -1
+        break
+    
+ }
+    
     asteroids.push(
         new Asteroid({
             position: {
-                x:0, 
-                y:0,
+                x:x, 
+                y:y,
             },
             velocity: {
-                x:1, 
-                y:0,
+                x:vx, 
+                y:vy,
             },
-
+            radius
         })
     )
 
