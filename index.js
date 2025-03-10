@@ -9,6 +9,7 @@ canvas.height = window.innerHeight
 ctx.fillStyle = 'black'
 ctx.fillRect(0, 0, canvas.width, canvas.height)
 
+
 class Player {
     constructor ({position, velocity}) {
         this.position = position // Position is a x, y object
@@ -42,6 +43,26 @@ class Player {
         this.position.x += this.velocity.x
         this.position.y += this.velocity.y
     }
+
+    getVertices() {
+        const cos = Math.cos(this.rotation)
+        const sin = Math.sin(this.rotation)
+    
+        return [
+          {
+            x: this.position.x + cos * 30 - sin * 0,
+            y: this.position.y + sin * 30 + cos * 0,
+          },
+          {
+            x: this.position.x + cos * -10 - sin * 10,
+            y: this.position.y + sin * -10 + cos * 10,
+          },
+          {
+            x: this.position.x + cos * -10 - sin * -10,
+            y: this.position.y + sin * -10 + cos * -10,
+          },
+        ]
+      }
 
 }
 
