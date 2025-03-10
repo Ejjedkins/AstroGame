@@ -256,7 +256,7 @@ function circlePlayerCollision(circle, triangle) {
 
 //Adding in an animation function
 function animate() {
-    window.requestAnimationFrame(animate)
+   const animationId =  window.requestAnimationFrame(animate)
     ctx.fillStyle = 'black'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
@@ -282,6 +282,11 @@ function animate() {
     for (let i = asteroids.length - 1; i >= 0; i--) {
         const asteroid = asteroids[i]
         asteroid.update()
+
+        if (circlePlayerCollision(asteroid, player.getVertices())) {
+            console.log('Game over')
+            window.cancelAnimationFrame(animationId)
+        }
 
 
         //Making sure projectiles no longer exist when off screen
