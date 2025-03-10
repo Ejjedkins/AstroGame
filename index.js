@@ -131,15 +131,15 @@ const keys = {
     }
 }
 
-const MSD = 3 //Created constant to apply to the spped of the player movement
-const RSD = 0.03 //Created constant to apply to the spped of the player movement
-const FRN = 0.95 //Created constant for plye friction
+const MSD = 7 //Created constant to apply to the spped of the player movement
+const RSD = 0.07 //Created constant to apply to the sped of the player rotation
+const FRN = 0.95 //Created constant for player friction
 const PSD = 4 //Speed of projectile
 
 const projectiles = []
 const asteroids = []
 
-window.setInterval(() => {
+const intervalId = window.setInterval(() => {
     let x, y;
     let vx, vy;
     let radius = 50 * Math.random() + 10;
@@ -286,8 +286,8 @@ function animate() {
         if (circlePlayerCollision(asteroid, player.getVertices())) {
             console.log('Game over')
             window.cancelAnimationFrame(animationId)
+            clearInterval(intervalId)
         }
-
 
         //Making sure projectiles no longer exist when off screen
         if (asteroid.position.x + asteroid.radius < 0 || 
