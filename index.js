@@ -23,7 +23,7 @@ class Player {
         ctx.rotate(this.rotation)
         ctx.translate(-this.position.x, -this.position.y)
         
-        ctx.beginPath() // This wreventing a snail trail from player
+        ctx.beginPath() // Preventing a snail trail from player
         ctx.moveTo(this.position.x + 30, this.position.y)
         ctx.lineTo(this.position.x - 10, this.position.y - 10)
         ctx.lineTo(this.position.x - 10, this.position.y + 10)
@@ -180,7 +180,6 @@ function collision(circle1, circle2) {
     const distance = Math.sqrt(xDifference * xDifference + yDifference * yDifference)
 
     if (distance <= circle1.radius + circle2.radius) {
-        console.log('collision')
         return true
     }
     return false
@@ -217,15 +216,6 @@ function animate() {
         const asteroid = asteroids[i]
         asteroid.update()
 
-        //Adding in projectile for loop to check for colliton between projectile and asteroid
-        for (let i = projectiles.length - 1; i >= 0; i--) {
-            const projectile = projectiles[i]
-
-            if (collision(asteroid, projectile)) {
-                console.log("Big Success")
-            }
-
-        }
 
         //Making sure projectiles no longer exist when off screen
         if (asteroid.position.x + asteroid.radius < 0 || 
@@ -234,7 +224,20 @@ function animate() {
             asteroid.position.y + asteroid.radius < 0
         ) {
             asteroids.splice(i, 1)
+            
         }
+        
+        //Adding in projectile for loop to check for colliton between projectile and asteroid
+        for (let j = projectiles.length - 1; j>= 0; j--) {
+            const projectile = projectiles[j]
+
+            if (collision(asteroid, projectile)) {
+                asteroids.splice(i, 1) 
+                projectiles.splice(j, 1)
+            }
+
+        }
+    
     }
 
 
