@@ -179,7 +179,7 @@ function collision(circle1, circle2) {
     const yDifference = circle2.position.y - circle1.position.y
     const distance = Math.sqrt(xDifference * xDifference + yDifference * yDifference)
 
-    if (distance <= circle1.radius + radius2.radius) {
+    if (distance <= circle1.radius + circle2.radius) {
         console.log('collision')
         return true
     }
@@ -219,7 +219,7 @@ function animate() {
 
         //Adding in projectile for loop to check for colliton between projectile and asteroid
         for (let i = projectiles.length - 1; i >= 0; i--) {
-            const projectile = projectile[i]
+            const projectile = projectiles[i]
 
             if (collision(asteroid, projectile)) {
                 console.log("Big Success")
