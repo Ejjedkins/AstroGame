@@ -173,7 +173,22 @@ window.setInterval(() => {
     );
 }, 3000);
 
-//Adding in an animation loop
+//Function for collision between protectiles and asteroids
+function collision(circle1, circle2) {
+    const xDifference = circle2.position.x - circle1.position.x
+    const yDifference = circle2.position.y - circle1.position.y
+    const distance = Math.sqrt(xDifference * xDifference + yDifference * yDifference)
+
+    if (distance <= circle1.radius + radius2.radius) {
+        console.log('collision')
+        return true
+    }
+    return false
+}
+
+
+
+//Adding in an animation function
 function animate() {
     window.requestAnimationFrame(animate)
     ctx.fillStyle = 'black'
@@ -201,6 +216,25 @@ function animate() {
     for (let i = asteroids.length - 1; i >= 0; i--) {
         const asteroid = asteroids[i]
         asteroid.update()
+
+        //Adding in projectile for loop to check for colliton between projectile and asteroid
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            const projectile = projectile[i]
+
+            if (collision(asteroid, projectile)) {
+                console.log("Big Success")
+            }
+
+        }
+
+        //Making sure projectiles no longer exist when off screen
+        if (asteroid.position.x + asteroid.radius < 0 || 
+            asteroid.position.x - asteroid.radius > canvas.width ||
+            asteroid.position.y - asteroid.radius > canvas.height ||
+            asteroid.position.y + asteroid.radius < 0
+        ) {
+            asteroids.splice(i, 1)
+        }
     }
 
 
