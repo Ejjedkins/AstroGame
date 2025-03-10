@@ -96,11 +96,22 @@ class Asteroid{
     }
 
     draw() {
-        ctx.beginPath()
-        ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
-        ctx.closePath()
-        ctx.strokeStyle = 'white'
-        ctx.stroke()
+        ctx.beginPath();
+        //Creating an irregular shape using lineTo and arcTo
+        const sides = Math.floor(Math.random() * 8) + 5; //Random number of sides
+        for (let i = 0; i < sides; i++) {
+            const angle = (i / sides) * Math.PI * 2;
+            const x = this.position.x + this.radius * Math.cos(angle) * (0.8 + Math.random() * 0.4); //Random radius variation
+            const y = this.position.y + this.radius * Math.sin(angle) * (0.8 + Math.random() * 0.4);
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.closePath();
+        ctx.fillStyle = 'gray';
+        ctx.fill();
     }
 
     update() {
