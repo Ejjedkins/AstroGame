@@ -1,390 +1,210 @@
-const canvas = document.querySelector('canvas') //Moving canvas element from html to javascript
-const ctx = canvas.getContext('2d')
+
+import {Player} from './Player.js'
+import {Projectile} from './Projectile.js'
+import {Asteroid} from './Asteroid.js'
 
 
-//Insuring that the canvas matches with the height and width of the browser
-canvas.width = window.innerWidth 
-canvas.height = window.innerHeight
+const canvas = document.querySelector('canvas');
+const ctx = canvas.getContext('2d');
 
-ctx.fillStyle = 'black'
-ctx.fillRect(0, 0, canvas.width, canvas.height)
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
+const backgroundImage = new Image();
+backgroundImage.src = './assets/Space.png';
 
-class Player {
-    constructor ({position, velocity}) {
-        this.position = position // Position is a x, y object
-        this.velocity = velocity
-        this.rotation = 0
-    }
-    //Designing the player
-    shape() {
-        ctx.save()
-        
-        ctx.translate(this.position.x, this.position.y)
-        ctx.rotate(this.rotation)
-        ctx.translate(-this.position.x, -this.position.y)
-        
-        ctx.beginPath() // Preventing a snail trail from player
-        ctx.moveTo(this.position.x + 30, this.position.y)
-        ctx.lineTo(this.position.x - 10, this.position.y - 10)
-        ctx.lineTo(this.position.x - 10, this.position.y + 10)
-        ctx.closePath()
+let gameOver = false;
+let gameStarted = true; // Game starts immediately
+let animationId;
+let intervalId;
+let player;
+const keys = { ArrowUp: { pressed: false }, 
+ArrowRight: { pressed: false }, 
+ArrowLeft: { pressed: false } };
+const MSD = 5; // Player Movement Speed
+const RSD = 0.05; //Rotation Speed
+const FRN = 0.95; //Friction Speed
+const PSD = 4; //Projectile Speed
+let projectiles = [];
+let asteroids = [];
+let score = 0; // Initialize the score
+let lives = 3;
 
-        ctx.strokeStyle = 'white'
-        ctx.fillStyle = 'blue'
-        ctx.stroke()
-        ctx.fill()
-        ctx.restore()
-    }
+//Adding sound effects
+const projSound = new Audio('./assets/retro-laser-1-236669.mp3'); 
+const destroySound = new Audio('./assets/retro-explode-1-236678.mp3'); 
+const gameOverSound = new Audio('./assets/game-over-arcade-6435.mp3');
 
-    //Update the position for every frame based on the velocity of x & y
-    update() {
-        this.shape()
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-    }
-
-    getVertices() {
-        const cos = Math.cos(this.rotation)
-        const sin = Math.sin(this.rotation)
-    
-        return [
-          {
-            x: this.position.x + cos * 30 - sin * 0,
-            y: this.position.y + sin * 30 + cos * 0,
-          },
-          {
-            x: this.position.x + cos * -10 - sin * 10,
-            y: this.position.y + sin * -10 + cos * 10,
-          },
-          {
-            x: this.position.x + cos * -10 - sin * -10,
-            y: this.position.y + sin * -10 + cos * -10,
-          },
-        ]
-      }
-
+function init() {
+    player = new Player({ position: { x: canvas.width / 2, y: canvas.height / 2 }, velocity: { x: 0, y: 0 } });
+    player.rotation = 0;
+    projectiles = [];
+    asteroids = [];
+    gameOver = false;
 }
 
-class Projectile{
-    constructor({position, velocity}) {
-        this.position = position
-        this.velocity = velocity
-        this.radius = 5
-    }
-
-    draw() {
-        ctx.beginPath()
-        ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false)
-        ctx.closePath()
-        ctx.fillStyle = 'white'
-        ctx.fill()
-    }
-
-    update() {
-        this.draw()
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-    }
-}
-
-class Asteroid{
-    constructor({position, velocity, radius}) {
-        this.position = position
-        this.velocity = velocity
-        this.radius = radius
-    }
-
-    draw() {
-        ctx.beginPath();
-        //Creating an irregular shape using lineTo and arcTo
-        const sides = Math.floor(Math.random() * 8) + 5; //Random number of sides
-        for (let i = 0; i < sides; i++) {
-            const angle = (i / sides) * Math.PI * 2;
-            const x = this.position.x + this.radius * Math.cos(angle) * (0.8 + Math.random() * 0.4); //Random radius variation
-            const y = this.position.y + this.radius * Math.sin(angle) * (0.8 + Math.random() * 0.4);
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-        ctx.closePath();
-        ctx.fillStyle = 'gray';
-        ctx.fill();
-    }
-
-    update() {
-        this.draw()
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-    }
-}
-
-const player  = new Player( {
-    position: {x:canvas.width / 2 , y :canvas.height / 2}, //Will place charater in the middle of the screen
-    velocity:{x:0 , y :0}
-})
-
-player.shape()
-
-const keys = {
-    ArrowUp: {
-        pressed: false
-    },
-
-    ArrowRight: {
-        pressed: false
-    },
-
-    ArrowLeft: {
-        pressed: false
-    }
-}
-
-const MSD = 7 //Created constant to apply to the spped of the player movement
-const RSD = 0.07 //Created constant to apply to the sped of the player rotation
-const FRN = 0.95 //Created constant for player friction
-const PSD = 4 //Speed of projectile
-
-const projectiles = []
-const asteroids = []
-
-const intervalId = window.setInterval(() => {
-    let x, y;
-    let vx, vy;
-    let radius = 50 * Math.random() + 10;
-
-    // Determine spawn location (edge of screen)
-    const side = Math.floor(Math.random() * 4); // 0: left, 1: top, 2: right, 3: bottom
-
+function spawnAsteroid() {
+    let x, y, vx, vy, radius = 50 * Math.random() + 10;
+    const side = Math.floor(Math.random() * 4);
     switch (side) {
-        case 0: // left
-            x = 0 - radius;
-            y = Math.random() * canvas.height;
-            break;
-        case 1: // top
-            x = Math.random() * canvas.width;
-            y = 0 - radius;
-            break;
-        case 2: // right
-            x = canvas.width + radius;
-            y = Math.random() * canvas.height;
-            break;
-        case 3: // bottom
-            x = Math.random() * canvas.width;
-            y = canvas.height + radius;
-            break;
+        case 0: x = 0 - radius; y = Math.random() * canvas.height; break;
+        case 1: x = Math.random() * canvas.width; y = 0 - radius; break;
+        case 2: x = canvas.width + radius; y = Math.random() * canvas.height; break;
+        case 3: x = Math.random() * canvas.width; y = canvas.height + radius; break;
     }
-
-    //Generate a random angle for velocity
-    const angle = Math.random() * 2 * Math.PI; // Random angle in radians (0 to 2*PI)
-
-    //Calculate velocity components
+    const angle = Math.random() * 2 * Math.PI;
     vx = Math.cos(angle);
     vy = Math.sin(angle);
-
-    //Keep velocity consistent
-    const speed = 1; // Adjust speed as needed
+    const speed = 1;
     const magnitude = Math.sqrt(vx * vx + vy * vy);
     vx = (vx / magnitude) * speed;
     vy = (vy / magnitude) * speed;
+    asteroids.push(new Asteroid({ position: { x, y }, velocity: { x: vx, y: vy }, radius }));
+}
 
-    asteroids.push(
-        new Asteroid({
-            position: {
-                x: x,
-                y: y,
-            },
-            velocity: {
-                x: vx,
-                y: vy,
-            },
-            radius,
-        })
-    );
-}, 3000);
-
-//Function for collision between protectiles and asteroids
-function collision(circle1, circle2) {
-    const xDifference = circle2.position.x - circle1.position.x
-    const yDifference = circle2.position.y - circle1.position.y
-    const distance = Math.sqrt(xDifference * xDifference + yDifference * yDifference)
-
-    if (distance <= circle1.radius + circle2.radius) {
-        return true
+function animate() {
+    if (gameOver) {
+        ctx.font = '48px Silkscreen';
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2);
+        gameOverSound.play(); 
+        return;
     }
-    return false
+
+    animationId = requestAnimationFrame(animate);
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height); // Clear the canvas
+
+
+    player.update();
+
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const projectile = projectiles[i];
+        projectile.update();
+        if (projectile.position.x + projectile.radius < 0 || projectile.position.x - projectile.radius > canvas.width ||
+            projectile.position.y - projectile.radius > canvas.height || projectile.position.y + projectile.radius < 0) {
+            projectiles.splice(i, 1);
+        }
+    }
+
+    for (let i = asteroids.length - 1; i >= 0; i--) {
+        const asteroid = asteroids[i];
+        asteroid.update();
+
+        if (circlePlayerCollision(asteroid, player.getVertices())) {
+            lives--;
+            if (lives <= 0) {
+                console.log('Game Over - No Lives Left');
+                gameOver = true;
+                return; // Stop the animation loop
+            } else {
+                console.log(`Life Lost! Lives remaining: ${lives}`);
+                // Reset player position
+                player.position.x = canvas.width / 2;
+                player.position.y = canvas.height / 2;
+                player.velocity.x = 0;
+                player.velocity.y = 0;
+                player.rotation = 0; // Optionally reset rotation
+                // Optionally add a brief invulnerability period here
+            }
+            return; // Exit the asteroid collision check for this frame
+        }
+
+        if (asteroid.position.x + asteroid.radius < 0 || asteroid.position.x - asteroid.radius > canvas.width ||
+            asteroid.position.y - asteroid.radius > canvas.height || asteroid.position.y + asteroid.radius < 0) {
+            asteroids.splice(i, 1);
+        }
+
+        for (let j = projectiles.length - 1; j >= 0; j--) {
+            const projectile = projectiles[j];
+            if (collision(asteroid, projectile)) {
+                score += 10; // Increment the score by 10
+                console.log(score)
+                asteroids.splice(i, 1);
+                projectiles.splice(j, 1);
+                destroySound.play();
+                break;
+            }
+        }
+    }
+
+    if (keys.ArrowUp.pressed) {
+        player.velocity.x = Math.cos(player.rotation) * MSD;
+        player.velocity.y = Math.sin(player.rotation) * MSD;
+    } else if (!keys.ArrowUp.pressed) {
+        player.velocity.x *= FRN;
+        player.velocity.y *= FRN;
+    }
+
+    if (keys.ArrowRight.pressed) player.rotation += RSD;
+    else if (keys.ArrowLeft.pressed) player.rotation -= RSD;
+
+    //Setting up scoreboard
+    ctx.font = '30px Silkscreen';
+    ctx.fillStyle = 'white';
+    ctx.fillText(`Score: ${score}`, canvas.width/1.7, 35);
+    ctx.fillText(`Lives: ${lives}`, canvas.width/3.4, 35);
+}
+
+function collision(circle1, circle2) {
+    const xDifference = circle2.position.x - circle1.position.x;
+    const yDifference = circle2.position.y - circle1.position.y;
+    const distance = Math.sqrt(xDifference * xDifference + yDifference * yDifference);
+    return distance <= circle1.radius + circle2.radius;
 }
 
 function circlePlayerCollision(circle, triangle) {
-    // Check if the circle is colliding with any of the players's edges
     for (let i = 0; i < 3; i++) {
-      let start = triangle[i]
-      let end = triangle[(i + 1) % 3]
-  
-      let dx = end.x - start.x
-      let dy = end.y - start.y
-      let length = Math.sqrt(dx * dx + dy * dy)
-  
-      let dot =
-        ((circle.position.x - start.x) * dx +
-          (circle.position.y - start.y) * dy) /
-        Math.pow(length, 2)
-  
-      let closestX = start.x + dot * dx
-      let closestY = start.y + dot * dy
-  
-      if (!isPointOnLineSegment(closestX, closestY, start, end)) {
-        closestX = closestX < start.x ? start.x : end.x
-        closestY = closestY < start.y ? start.y : end.y
-      }
-  
-      dx = closestX - circle.position.x
-      dy = closestY - circle.position.y
-  
-      let distance = Math.sqrt(dx * dx + dy * dy)
-  
-      if (distance <= circle.radius) {
-        return true
-      }
-    }
-  
-    // No collision
-    return false
-  }
-  
-  function isPointOnLineSegment(x, y, start, end) {
-    return (
-      x >= Math.min(start.x, end.x) &&
-      x <= Math.max(start.x, end.x) &&
-      y >= Math.min(start.y, end.y) &&
-      y <= Math.max(start.y, end.y)
-    )
-  }
-
-
-
-//Adding in an animation function
-function animate() {
-   const animationId =  window.requestAnimationFrame(animate)
-    ctx.fillStyle = 'black'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
-    player.update()
-
-    //Rendering projectiles on screen through a for loop through the back of the array
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-        const projectile = projectiles[i]
-        projectile.update()
-
-        //Making sure projectiles no longer exist when off screen
-        if (projectile.position.x + projectile.radius < 0 || 
-            projectile.position.x - projectile.radius > canvas.width ||
-            projectile.position.y - projectile.radius > canvas.height ||
-            projectile.position.y + projectile.radius < 0
-         ) {
-            projectiles.splice(i, 1)
+        let start = triangle[i];
+        let end = triangle[(i + 1) % 3];
+        let dx = end.x - start.x;
+        let dy = end.y - start.y;
+        let length = Math.sqrt(dx * dx + dy * dy);
+        let dot = ((circle.position.x - start.x) * dx + (circle.position.y - start.y) * dy) / Math.pow(length, 2);
+        let closestX = start.x + dot * dx;
+        let closestY = start.y + dot * dy;
+        if (!isPointOnLineSegment(closestX, closestY, start, end)) {
+            closestX = closestX < start.x ? start.x : end.x;
+            closestY = closestY < start.y ? start.y : end.y;
         }
-
+        dx = closestX - circle.position.x;
+        dy = closestY - circle.position.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= circle.radius) return true;
     }
-
-    //Rendering in asteroids
-    for (let i = asteroids.length - 1; i >= 0; i--) {
-        const asteroid = asteroids[i]
-        asteroid.update()
-
-        if (circlePlayerCollision(asteroid, player.getVertices())) {
-            console.log('Game over')
-            window.cancelAnimationFrame(animationId)
-            clearInterval(intervalId)
-        }
-
-        //Making sure projectiles no longer exist when off screen
-        if (asteroid.position.x + asteroid.radius < 0 || 
-            asteroid.position.x - asteroid.radius > canvas.width ||
-            asteroid.position.y - asteroid.radius > canvas.height ||
-            asteroid.position.y + asteroid.radius < 0
-        ) {
-            asteroids.splice(i, 1)
-            
-        }
-        
-        //Adding in projectile for loop to check for colliton between projectile and asteroid
-        for (let j = projectiles.length - 1; j>= 0; j--) {
-            const projectile = projectiles[j]
-
-            if (collision(asteroid, projectile)) {
-                asteroids.splice(i, 1) 
-                projectiles.splice(j, 1)
-            }
-
-        }
-    
-    }
-
-
-    if (keys.ArrowUp.pressed) {
-        
-        //Allows player to rotate in the right direction based on the rotation of the player
-        player.velocity.x = Math.cos(player.rotation) * MSD
-        player.velocity.y = Math.sin(player.rotation) * MSD
-    } 
-    else if (!keys.ArrowUp.pressed) {
-      
-      //Adding some fraction to player so that they don't immediately stop
-      player.velocity.x *= FRN
-      player.velocity.y *= FRN
-    }
-        
-    if (keys.ArrowRight.pressed) player.rotation += RSD
-        else if (keys.ArrowLeft.pressed) player.rotation -= RSD //Will rotate player the opposite way of right key
-
+    return false;
 }
 
-animate()
+function isPointOnLineSegment(x, y, start, end) {
+    return (x >= Math.min(start.x, end.x) && x <= Math.max(start.x, end.x) &&
+            y >= Math.min(start.y, end.y) && y <= Math.max(start.y, end.y));
+}
 
-window.addEventListener('keydown', (evt) =>  {
-    switch (evt.code){
-        case 'ArrowUp':
-            keys.ArrowUp.pressed = true 
-            break
-        case 'ArrowLeft':
-            keys.ArrowLeft.pressed = true 
-            break
-        case 'ArrowRight':
-            keys.ArrowRight.pressed = true   
-            break
+init();
+animate();
+intervalId = setInterval(spawnAsteroid, 3000);
+
+window.addEventListener('keydown', (evt) => {
+    if (!gameStarted || gameOver) return;
+    switch (evt.code) {
+        case 'ArrowUp': keys.ArrowUp.pressed = true; break;
+        case 'ArrowLeft': keys.ArrowLeft.pressed = true; break;
+        case 'ArrowRight': keys.ArrowRight.pressed = true; break;
         case 'Space':
             projectiles.push(new Projectile({
-                position : {
-                    x: player.position.x + Math.cos(player.rotation) * 30,
-                    y: player.position.y + Math.sin(player.rotation) * 30
-            },
-                velocity :{
-                    x: Math.cos(player.rotation) * PSD,
-                    y: Math.sin(player.rotation) * PSD
-            },
-
-
-        })) 
-    
+                position: { x: player.position.x + Math.cos(player.rotation) * 30, y: player.position.y + Math.sin(player.rotation) * 30 },
+                velocity: { x: Math.cos(player.rotation) * PSD, y: Math.sin(player.rotation) * PSD }
+            }));
+            projSound.play();
+            break;
     }
+});
 
-} )
-
-//Creating an event listener for when the player releases a key
-window.addEventListener('keyup', (evt) =>  {
-    switch (evt.code){
-        case 'ArrowUp':
-            keys.ArrowUp.pressed = false
-            break
-        case 'ArrowLeft':
-            keys.ArrowLeft.pressed = false
-            break
-        case 'ArrowRight':
-            keys.ArrowRight.pressed = false  
-            break
+window.addEventListener('keyup', (evt) => {
+    if (!gameStarted || gameOver) return;
+    switch (evt.code) {
+        case 'ArrowUp': keys.ArrowUp.pressed = false; break;
+        case 'ArrowLeft': keys.ArrowLeft.pressed = false; break;
+        case 'ArrowRight': keys.ArrowRight.pressed = false; break;
     }
-
-} )
+});
