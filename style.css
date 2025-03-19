@@ -1,0 +1,19 @@
+    
+  @import url('https://fonts.googleapis.com/css2?family=Parkinsans:wght@300..800&family=Silkscreen:wght@400;700&display=swap');
+ 
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ensure the button is in the viewport */
+    background-color: black; 
+  }
+
+  canvas {
+    position: absolute; /* To overlay the canvas on top of the button */
+    top: 0;
+    left: 0;
+    z-index: 1; /* Ensure canvas is above the button initially */
+  }
